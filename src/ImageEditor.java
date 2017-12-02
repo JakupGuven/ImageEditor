@@ -37,70 +37,122 @@ public class ImageEditor {
 	// }
 
 	public static void main(String[] args) {
-		String file;
-		if (args[0].equals("p")) {
-			ImageEditor.paintSimpleImage();
-			try {
-				ImageIO.write(img, "PNG", new File("computerpainted"));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} else if (args[0].equals("e")) {
-			switch (args[1]) {
-			case "contrast":
-				file = args[2];
-				try {
-					img = ImageIO.read(new File(file));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				ImageEditor.changeContrast(Double.parseDouble(args[3]));
-				try {
-					ImageIO.write(img, "PNG", new File(file + "_changed_contrast"));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				break;
-			case "brightness":
-				file = args[2];
-				try {
-					img = ImageIO.read(new File(file));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				ImageEditor.changeBrightness(Integer.parseInt(args[3]));
-				try {
-					ImageIO.write(img, "PNG", new File(file + "_changed_brightness"));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				break;
-			case "blur":
-				file = args[2];
-				try {
-					img = ImageIO.read(new File(file));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				ImageEditor.meanBlur();
-				try {
-					ImageIO.write(img, "PNG", new File(file + "_changed_blur"));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				break;
-			}
-		}else {
-			System.out.println("Unknown command: " + args[0]);
+		String file = args[0];
+		try {
+			img = ImageIO.read(new File(file));
+			ImageEditor.findEdges();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
+//		if (args[0].equals("p")) {
+//			ImageEditor.paintSimpleImage();
+//			try {
+//				ImageIO.write(img, "PNG", new File("computerpainted"));
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		} else if (args[0].equals("e")) {
+//			switch (args[1]) {
+//			case "contrast":
+//				file = args[2];
+//				try {
+//					img = ImageIO.read(new File(file));
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				ImageEditor.changeContrast(Double.parseDouble(args[3]));
+//				try {
+//					ImageIO.write(img, "PNG", new File(file + "_changed_contrast"));
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				break;
+//			case "brightness":
+//				file = args[2];
+//				try {
+//					img = ImageIO.read(new File(file));
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				ImageEditor.changeBrightness(Integer.parseInt(args[3]));
+//				try {
+//					ImageIO.write(img, "PNG", new File(file + "_changed_brightness"));
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				break;
+//			case "blur":
+//				file = args[2];
+//				try {
+//					img = ImageIO.read(new File(file));
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				ImageEditor.meanBlur();
+//				try {
+//					ImageIO.write(img, "PNG", new File(file + "_changed_blur"));
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				break;
+//			}
+//		}else {
+//			System.out.println("Unknown command: " + args[0]);
+//		}
+
+	}
+	
+	
+	public static void findEdges() {
+		BufferedImage image = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
+		WritableRaster inRaster = img.getRaster();
+		WritableRaster outRaster = image.getRaster();
+		//vertical 
+		int[][] vKernel = {{-1, 0, 1}, { -2, 0, 2 }, { -1, 0, 1}};
+		int[][] hKernel = {{-1, -2, -1}, { 0, 0, 0 }, { 1, 2, 1}};
+
+		for(int i = 0; i < inRaster.getWidth(); i++) {
+			for(int j = 0; j < inRaster.getHeight(); j++) {
+				int yGradient = 0;
+				int xGradient = 0;
+				int outPixelValue = 0;
+				int mI = 0; int mJ = 0;
+				for(int k = i -1; k < i+2; k++ ) {
+					mJ = 0;
+					for(int l = j-1; l < j+2; l++) {
+						try {
+							yGradient += inRaster.getSample(k, l, 0) * vKernel[mI][mJ];
+							xGradient += inRaster.getSample(k, l, 0) * hKernel[mI][mJ];
+							mJ++;
+						}catch(Exception e) {
+							mJ++;
+						}
+					}
+					mI++;
+				}
+				if(yGradient > 150 || yGradient < -150 || xGradient > 150 || xGradient < -150) {
+					outPixelValue = 0;
+				}else {
+					outPixelValue = 255;
+				}
+				outRaster.setSample(i, j, 0, outPixelValue);
+			}
+		}
+		try {
+			ImageIO.write(image, "PNG", new File("modified.png"));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public static void paintSimpleImage() {
@@ -139,8 +191,7 @@ public class ImageEditor {
 		BufferedImage outImage = new BufferedImage(inImage.getWidth(), inImage.getHeight(), BufferedImage.TYPE_INT_RGB);
 		WritableRaster inRaster = inImage.getRaster();
 		WritableRaster outRaster = outImage.getRaster();
-		int[][] filterMatrix = new int[3][3];
-
+		int[][] filterMatrix = new int[15][15];
 		// init filterMatrix
 		for (int i = 0; i < filterMatrix.length; i++) {
 			for (int j = 0; j < filterMatrix[i].length; j++) {
@@ -155,14 +206,12 @@ public class ImageEditor {
 					int missedPixelCounter = 0;
 					int mI = 0, mJ = 0;
 
-					for (int i = width - 1; i < width + 2; i++) {
-						for (int j = height - 1; j < height + 2; j++) {
+					for (int i = width - 1; i < width + 14; i++) {
+						mJ = 0;
+						for (int j = height - 1; j < height + 14; j++) {
 							try {
-								// System.out.println(filterMatrix[i][j]);
-								// System.out.println(inRaster.getSample(i, j, channels));
-								// System.out.println(missedPixelCounter);
+
 								matrixAreaValue += inRaster.getSample(i, j, channels) * filterMatrix[mI][mJ];
-								// System.out.println(matrixAreaValue);
 								mJ++;
 							} catch (Exception e) {
 								missedPixelCounter++;
@@ -171,19 +220,22 @@ public class ImageEditor {
 						}
 						mI++;
 					}
-					// System.out.println(matrixAreaValue);
-					int outPixelValue = matrixAreaValue / (9-missedPixelCounter);
-					// if(outPixelValue > 255) {
-					// outPixelValue = 255;
-					// }else if(outPixelValue < 0) {
-					// outPixelValue = 0;
-					// }
+					if(matrixAreaValue != 0) {
+						matrixAreaValue = matrixAreaValue / (225-missedPixelCounter);
+					}
+					int outPixelValue = matrixAreaValue;
+					 if(outPixelValue > 255) {
+					 outPixelValue = 255;
+					 }else if(outPixelValue < 0) {
+					 outPixelValue = 0;
+					 }
 					outRaster.setSample(width, height, channels, outPixelValue);
 
 				}
 			}
 		}
 		try {
+			System.out.println("Writing image to file");
 			ImageIO.write(outImage, "PNG", new File("modified.png"));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -192,9 +244,6 @@ public class ImageEditor {
 
 	}
 
-	public static void detectEdges() {
-
-	}
 
 	public static void changeContrast(double contrast) {
 		BufferedImage image = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
