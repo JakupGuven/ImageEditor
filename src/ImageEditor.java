@@ -155,13 +155,13 @@ public class ImageEditor {
 					int missedPixelCounter = 0;
 					int mI = 0, mJ = 0;
 
-					for (int i = width - 1; i < width + 3; i++) {
-						for (int j = height - 1; j < height + 3; j++) {
+					for (int i = width - 1; i < width + 2; i++) {
+						for (int j = height - 1; j < height + 2; j++) {
 							try {
 								// System.out.println(filterMatrix[i][j]);
 								// System.out.println(inRaster.getSample(i, j, channels));
 								// System.out.println(missedPixelCounter);
-								matrixAreaValue += inRaster.getSample(i, j, channels) * 0.1;
+								matrixAreaValue += inRaster.getSample(i, j, channels) * filterMatrix[mI][mJ];
 								// System.out.println(matrixAreaValue);
 								mJ++;
 							} catch (Exception e) {
@@ -172,7 +172,7 @@ public class ImageEditor {
 						mI++;
 					}
 					// System.out.println(matrixAreaValue);
-					int outPixelValue = matrixAreaValue / 9;
+					int outPixelValue = matrixAreaValue / (9-missedPixelCounter);
 					// if(outPixelValue > 255) {
 					// outPixelValue = 255;
 					// }else if(outPixelValue < 0) {
