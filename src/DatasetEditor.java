@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import java.io.File;
@@ -14,7 +15,7 @@ public class DatasetEditor {
 		String file = args[0];
 		try {
 			image = ImageIO.read(new File(file));
-			DatasetEditor.flipVertically();
+			DatasetEditor.flipHorizontally();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -181,15 +182,21 @@ public class DatasetEditor {
 		WritableRaster outRaster = outImage.getRaster();
 		
 		for(int widthPos = 0; widthPos < inRaster.getWidth(); widthPos++) {
-			for(int heightPos = 0; heightPos < inRaster.getWidth(); widthPos++) {
+			for(int heightPos = 0, j = inRaster.getHeight()-1; heightPos < inRaster.getHeight(); heightPos++, j--) {
 				for(int colorChannels = 0; colorChannels < inRaster.getNumBands(); colorChannels++) {
-					int tempValue = 
+										
+					int value = inRaster.getSample(widthPos, j, colorChannels);
+					
+					outRaster.setSample(widthPos, heightPos, colorChannels, value);
 				}
+
 			}
+			
+			
 		}
-		
+	
 		try {
-			ImageIO.write(outImage, "PNG", new File("datasetmodified.png"));
+			ImageIO.write(outImage, "JPG", new File("datasetmodified.jpg"));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -197,15 +204,86 @@ public class DatasetEditor {
 	}
 
 	public static void flipHorizontally() {
+		BufferedImage outImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+		WritableRaster inRaster = image.getRaster();
+		WritableRaster outRaster = outImage.getRaster();
+		
+		for(int widthPos = 0, i = inRaster.getWidth()-1; widthPos < inRaster.getWidth(); widthPos++, i--) {
+			for(int heightPos = 0; heightPos < inRaster.getHeight(); heightPos++) {
+				for(int colorChannels = 0; colorChannels < inRaster.getNumBands(); colorChannels++) {
+										
+					int value = inRaster.getSample(i, heightPos, colorChannels);
+					
+					outRaster.setSample(widthPos, heightPos, colorChannels, value);
+				}
 
+			}
+			
+			
+		}
+	
+		try {
+			ImageIO.write(outImage, "JPG", new File("datasetmodified.jpg"));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
-	public static void setSaturation() {
-
+	public static void setSaturation(int saturation) {
+		BufferedImage outImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+		WritableRaster inRaster = image.getRaster();
+		WritableRaster outRaster = outImage.getRaster();
+		
+		for(int widthPos = 0; widthPos < inRaster.getWidth(); widthPos++) {
+			for(int heightPos = 0; heightPos < inRaster.getHeight(); heightPos++) {
+				float[] hsbValue = Color.RGBtoHSB(inRaster.getSample(widthPos, heightPos, 0), inRaster.getSample(widthPos, heightPos, 1), inRaster.getSample(widthPos, heightPos, 2), null);
+				if(saturation > 0) {
+					hsbValue[1] += saturation;
+				}else {
+					hsbValue[1] -= saturation;
+				}
+				Color rgbValue = Color.getHSBColor(hsbValue[0], hsbValue[1], hsbValue[2]);
+				outRaster.setSample(widthPos, heightPos, 0, rgbValue.getRed());
+				outRaster.setSample(widthPos, heightPos, 1, rgbValue.getGreen());
+				outRaster.setSample(widthPos, heightPos, 2, rgbValue.getBlue());
+			}	
+		}
+	
+		try {
+			ImageIO.write(outImage, "JPG", new File("datasetmodified.jpg"));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
-	public static void setHue() {
-
+	public static void setHue(int hue) {
+		BufferedImage outImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+		WritableRaster inRaster = image.getRaster();
+		WritableRaster outRaster = outImage.getRaster();
+		
+		for(int widthPos = 0; widthPos < inRaster.getWidth(); widthPos++) {
+			for(int heightPos = 0; heightPos < inRaster.getHeight(); heightPos++) {
+				float[] hsbValue = Color.RGBtoHSB(inRaster.getSample(widthPos, heightPos, 0), inRaster.getSample(widthPos, heightPos, 1), inRaster.getSample(widthPos, heightPos, 2), null);
+				if(hue > 0) {
+					hsbValue[0] += hue;
+				}else {
+					hsbValue[0] -= hue;
+				}
+				Color rgbValue = Color.getHSBColor(hsbValue[0], hsbValue[1], hsbValue[2]);
+				outRaster.setSample(widthPos, heightPos, 0, rgbValue.getRed());
+				outRaster.setSample(widthPos, heightPos, 1, rgbValue.getGreen());
+				outRaster.setSample(widthPos, heightPos, 2, rgbValue.getBlue());
+			}	
+		}
+	
+		try {
+			ImageIO.write(outImage, "JPG", new File("datasetmodified.jpg"));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }
