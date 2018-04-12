@@ -40,7 +40,8 @@ public class ImageEditor {
 		String file = args[0];
 		try {
 			img = ImageIO.read(new File(file));
-			ImageEditor.findEdges();
+//			ImageEditor.findEdges();
+			ImageEditor.meanBlur();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -139,7 +140,7 @@ public class ImageEditor {
 					}
 					mI++;
 				}
-				if(yGradient > 150 || yGradient < -150 || xGradient > 150 || xGradient < -150) {
+				if(yGradient > 100 || yGradient < -100 || xGradient > 100 || xGradient < -100) {
 					outPixelValue = 0;
 				}else {
 					outPixelValue = 255;
@@ -202,6 +203,7 @@ public class ImageEditor {
 		for (int width = 0; width < inRaster.getWidth(); width++) {
 			for (int height = 0; height < inRaster.getHeight(); height++) {
 				for (int channels = 0; channels < inRaster.getNumBands(); channels++) {
+					
 					int matrixAreaValue = 0;
 					int missedPixelCounter = 0;
 					int mI = 0, mJ = 0;
@@ -299,6 +301,7 @@ public class ImageEditor {
 		for (int width = 0; width < inRaster.getWidth(); width++) {
 			for (int height = 0; height < inRaster.getHeight(); height++) {
 				for (int colour = 0; colour < inRaster.getNumBands(); colour++) {
+					
 					if (colour == 0) {
 						red = inRaster.getSample(width, height, colour);
 					} else if (colour == 1) {
